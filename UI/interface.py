@@ -3,36 +3,30 @@ import retrival_function as retrival
 import torch
 
 
-# 计算所选图像的特征编码
 def calculate_feature_code(image):
-    # 编写计算特征编码的代码
     return image.shape()
-
 
 def a(num):
     return num
-
 
 def clear_cache():
     torch.cuda.empty_cache()
     torch.cuda.synchronize()
 
-
-# 设置组件可见
 def module_visible():
     return gr.update(visible=True)
 
 
-# 设置存储待检索图像特征编码的临时变量
-# feature_code = None
-
 def main():
     with gr.Blocks() as demo:
+        # gradio界面标题设计
         gr.Markdown("<div align='center'><font face='华文行楷'><font size='70'>基于深度学习的细粒度图像检索系统</font></div>")
         # gr.Markdown("# 基于深度学习的细粒度图像检索系统")
         feature_code = gr.State()
         feature_code_db = gr.State()
         kind = gr.State()
+
+        # 图像检索分页界面
         with gr.Tab("Image Retrival"):
             with gr.Column():
                 with gr.Row():
@@ -170,6 +164,7 @@ def main():
                            ])
             clear_btn.click(fn=None)
 
+        # 数据库管理分页界面
         with gr.Tab("Database Management"):
             with gr.Column():
                 with gr.Row():
