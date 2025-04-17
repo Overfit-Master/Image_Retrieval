@@ -181,7 +181,8 @@ def main():
             get_msg_button.click(fn=retrival.calculate_feature_code_db, inputs=[Insert_image, Image_path],
                                  outputs=[feature_code_db, Insert_feature, Insert_category, Insert_type, Image_path])
 
-    demo.launch(auth=("admin", "113320"))
+    # 简单设置个账号密码
+    demo.launch(auth=("admin", "123456"))
     # demo.launch()
 
 
