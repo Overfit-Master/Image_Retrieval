@@ -17,21 +17,19 @@ car_model = Model.car_model
 classify_model = Model.classify_model
 
 # 权重文件路径
-flower_weight_path = r"C:\Users\31825\Desktop\diploma_project\Retrival\weight\flower-2024-05-16-19-31_best.pt"
-car_weight_path = r"C:\Users\31825\Desktop\diploma_project\Retrival\weight\car-2024-05-17-13-03_best.pt"
-classify_weight_path = r"C:\Users\31825\Desktop\diploma_project\Retrival\weight\best_classify.pt "
+flower_weight_path = r""
+car_weight_path = r""
+classify_weight_path = r""
 
 # 对输入图像进行处理再传入
 transform = transforms.Compose([
     transforms.Resize([224, 224]),
     transforms.ToTensor(),
     transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-]
-)
+])
 
 # 数据库路径
-# db_path = r"C:\Users\31825\Desktop\diploma_project\UI\Database\retrieval.db"
-db_path = r"C:\Users\31825\Desktop\diploma_project\UI\Database\retrival_database.db"
+db_path = r""
 
 
 # 先对输入图像进行分类，判断是车还是花
@@ -49,6 +47,7 @@ def classify_input(image):
             return key
 
 
+# 计算传入系统图像的哈希码
 def calculate_feature_code(image):
     flower_dict = {"Bluebell": 0, "Buttercup": 1, "Colts'Foot": 2, "Cowslip": 3, "Crocus": 4, "Daffodil": 5, "Daisy": 6,
                    "Dandelion": 7, "Fritillary": 8, "Iris": 9, "LilyValley": 10, "Pansy": 11, "Snowdrop": 12,
@@ -133,10 +132,12 @@ def calculate_feature_code(image):
                 "Volkswagen Beetle Hatchback 2012": 190, "Volkswagen Golf Hatchback 1991": 191,
                 "Volkswagen Golf Hatchback 2012": 192, "Volvo 240 Sedan 1993": 193, "Volvo C30 Hatchback 2012": 194,
                 "Volvo XC90 SUV 2007": 195}
+    
     # gr.Image的图片格式为数组，需要转为图片后再进行处理
     print(type(image))
     image = Image.fromarray(image)
     category = classify_input(image)
+    
     # 根据图片类别使用不同的模型进行后续工作
     if category == "flower":
         flower_model.load_state_dict(torch.load(flower_weight_path))
@@ -165,9 +166,12 @@ def calculate_feature_code(image):
             for key, val in car_dict.items():
                 if val == kind:
                     Type = key
+        
+        # 系统逻辑需要将哈希码显示在gradio界面上，gradio运行在cpu，而结果在gpu，需要取下来之后才能传递
         return output.cpu(), np.array2string(output.cpu().numpy()), category, category, Type
 
 
+# 计算需要传入数据库图像的哈希码，以及其它数据库存储的信息
 def calculate_feature_code_db(image, path):
     flower_dict = {"Bluebell": 0, "Buttercup": 1, "Colts'Foot": 2, "Cowslip": 3, "Crocus": 4, "Daffodil": 5, "Daisy": 6,
                    "Dandelion": 7, "Fritillary": 8, "Iris": 9, "LilyValley": 10, "Pansy": 11, "Snowdrop": 12,
@@ -287,6 +291,7 @@ def calculate_feature_code_db(image, path):
         return output.cpu(), np.array2string(output.cpu().numpy()), category, Type, path
 
 
+# gradio界面以block设计，运行后无法再创建组件，所以初始创建足够的组件，将其设为不可见
 def retrival_show_message(search_num, feature_code, kind):
     # 初始化返回列表的值，根据数量设为可见和不可见
     visible_list = [gr.update(visible=False), gr.update(visible=False), gr.update(visible=False),
@@ -306,12 +311,14 @@ def retrival_show_message(search_num, feature_code, kind):
     coon = sqlite3.connect(db_path)
     cursor = coon.cursor()
     similar_list = []
+    # 将输入系统图像的特征编码/哈希码与数据库存储的哈希码相比较，计算相似度
     if kind == "flower":
         cursor.execute("""SELECT id, feature_code FROM FLOWER""")
         result = cursor.fetchall()
         for row in result:
             id, feature_bytes = row
             feature_code_tensor = torch.load(io.BytesIO(feature_bytes))
+            # 使用的余弦相似度
             similarity = F.cosine_similarity(feature_code, feature_code_tensor)
             similar_list.append([id, similarity.item()])
         sort_list = sorted(similar_list, key=lambda x: x[1], reverse=True)
