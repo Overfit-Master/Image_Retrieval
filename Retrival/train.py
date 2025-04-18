@@ -38,6 +38,7 @@ def train(task: str, epochs):
     current_time = datetime.now()
     formatted_time = current_time.strftime('%Y-%m-%d-%H-%M')
 
+    # 模型保存路径以及训练日志的记录
     best_pt_file = task + '-' + formatted_time + '_best.pt'
     best_pt_path = os.path.join(config["weight_dir_path"], best_pt_file)
     last_pt_file = task + '-' + formatted_time + '_last.pt'
